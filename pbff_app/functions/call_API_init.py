@@ -5,13 +5,16 @@ import requests
 import json
 import mysql.connector
 
+allergens = []
 
 class CallAPI:
     """ Call A.P.I. Open Food Facts """
 
+    
+
     def load_data(self):
         """ Loading data of the A.P.I. Open Food Facts and convert to json """
-        
+
         # Establishing the connection
         mydb = mysql.connector.connect(
             host="localhost",
@@ -34,14 +37,12 @@ class CallAPI:
         sql_key_one = "SET FOREIGN_KEY_CHECKS=1"
         mycursor.execute(sql_key_one)
 
-
         # Closing the connection
         mydb.close()
 
         # ...
         categories = ['pizza', 'pate a tartiner', 'gateau', 'choucroute', 'bonbon', 'cassoulet', 'compote']
         results = []
-
 
         for elt in categories:
             payload = {'action': 'process', 'tagtype_0': 'categories', 'tag_contains_0': 'contains',
@@ -59,17 +60,24 @@ class CallAPI:
                     data_url = data['url']
                     data_nova_group = data['nova_group']
                     data_nutriscore_grade = data['nutriscore_grade']
+                    data_allergens = data['allergens_tags']
                 except:
                     pass
 
-                dic_data = {"data_id": data_id,"data_product_name_fr": data_product_name_fr,
-                        "data_category": elt, 
+                dic_data = {"data_id": data_id, "data_product_name_fr": data_product_name_fr,
+                        "data_category": elt,
                         "data_nova_group": data_nova_group, "nutriscore_grade": data_nutriscore_grade, "data_url": data_url}
                 tuple_data = (data_id, data_product_name_fr, elt, data_nova_group, data_nutriscore_grade, data_url)
                 results.append(dic_data)
 
+                for al in data_allergens:
+                    if al[:3] == 'en:':
+                        allergens.append(al)
 
-                #Connection to database
+                allergens_list = set(allergens)
+                # allergens.append(data_allergens)
+
+                # Connection to database
                 mydb = mysql.connector.connect(
                     host="localhost",
                     user="sebajou_opff",
@@ -77,7 +85,7 @@ class CallAPI:
                     database="openfactfoods_data"
                 )
 
-                #Insertion of search result data
+                # Insertion of search result data
                 mycursor = mydb.cursor()
 
                 try:
@@ -89,7 +97,8 @@ class CallAPI:
                 except:
                     pass
 
-
+        print(allergens_list)
 
 Call = CallAPI()
 Call.load_data()
+
