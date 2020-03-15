@@ -7,10 +7,9 @@ import mysql.connector
 
 allergens = []
 
+
 class CallAPI:
     """ Call A.P.I. Open Food Facts """
-
-    
 
     def load_data(self):
         """ Loading data of the A.P.I. Open Food Facts and convert to json """
@@ -24,16 +23,17 @@ class CallAPI:
         )
 
         # Creating a cursor object using the cursor() method
-        cursor = mydb.cursor()
-
-        # Drop then creating table as per requirement
         mycursor = mydb.cursor()
 
+        # Drop then creating tables as per requirement
         sql_key_zero = "SET FOREIGN_KEY_CHECKS=0"
-        sql_drop_table = "DROP TABLE IF EXISTS Food_list"
+        sql_drop_table_Food_list = "DROP TABLE IF EXISTS Food_list"
+        sql_drop_table_Alergen = "DROP TABLE IF EXISTS Alergen"
         mycursor.execute(sql_key_zero)
-        mycursor.execute(sql_drop_table)
-        mycursor.execute("CREATE TABLE Food_list (id_food_code VARCHAR(100) NOT NULL PRIMARY KEY, food_name VARCHAR(100) NULL DEFAULT NULL, `category` VARCHAR(40) NULL DEFAULT NULL, score_Nova_group INTEGER NULL DEFAULT NULL, nutriscore_grade CHAR(1) NULL DEFAULT NULL, food_url MEDIUMTEXT NULL DEFAULT NULL)") 
+        mycursor.execute(sql_drop_table_Food_list)
+        mycursor.execute(sql_drop_table_Alergen)
+        mycursor.execute("CREATE TABLE Food_list (id_food_code VARCHAR(100) NOT NULL PRIMARY KEY, food_name VARCHAR(100) NULL DEFAULT NULL, `category` VARCHAR(40) NULL DEFAULT NULL, score_Nova_group INTEGER NULL DEFAULT NULL, nutriscore_grade CHAR(1) NULL DEFAULT NULL, food_url MEDIUMTEXT NULL DEFAULT NULL)")
+        mycursor.execute("CREATE TABLE `Alergen` (`id_alergen` INTEGER NOT NULL AUTO_INCREMENT, `alergen_name` VARCHAR(100) NULL DEFAULT NULL, `id_food_code` VARCHAR(100) NULL DEFAULT NULL, PRIMARY KEY (`id_alergen`))")
         sql_key_one = "SET FOREIGN_KEY_CHECKS=1"
         mycursor.execute(sql_key_one)
 
@@ -41,7 +41,7 @@ class CallAPI:
         mydb.close()
 
         # ...
-        categories = ['pizza', 'pate a tartiner', 'gateau', 'choucroute', 'bonbon', 'cassoulet', 'compote']
+        categories = ['pizza', 'pate a tartiner', 'gateau', 'choucroute', 'bonbon', 'cassoulet', 'compote', 'cookies']
         results = []
 
         for elt in categories:
@@ -50,8 +50,6 @@ class CallAPI:
                     'axis_x': 'energy', 'axis_y': 'products_n', 'json': '1'}
             req = requests.get("https://fr.openfoodfacts.org/cgi/search.pl?", params=payload)
             data_json = req.json()
-
-            # data_str = json.dumps(data_json, indent = 2) 
 
             for data in data_json['products']:
                 try:
@@ -64,18 +62,16 @@ class CallAPI:
                 except:
                     pass
 
-                dic_data = {"data_id": data_id, "data_product_name_fr": data_product_name_fr,
-                        "data_category": elt,
-                        "data_nova_group": data_nova_group, "nutriscore_grade": data_nutriscore_grade, "data_url": data_url}
                 tuple_data = (data_id, data_product_name_fr, elt, data_nova_group, data_nutriscore_grade, data_url)
-                results.append(dic_data)
 
+                # Loop in allergens list in each product
                 for al in data_allergens:
+                    # Choose only english name allergens
                     if al[:3] == 'en:':
+                        # List all allergens in each product
                         allergens.append(al)
-
+                # List of allergens without dooble
                 allergens_list = set(allergens)
-                # allergens.append(data_allergens)
 
                 # Connection to database
                 mydb = mysql.connector.connect(
@@ -90,15 +86,43 @@ class CallAPI:
 
                 try:
                     sql = "INSERT INTO Food_list (id_food_code, food_name, category, score_Nova_group, nutriscore_grade, food_url) VALUES (%s, %s, %s, %s, %s, %s)"
-                    val = tuple_data
-                    mycursor.execute(sql, val)
-
+                    mycursor.execute(sql, tuple_data)
                     mydb.commit()
                 except:
                     pass
+                
+                # Insertion of search result data
+                for al in data_allergens:
+                    if al[:3] == 'en:':
+                        tuple_al = (al, data_id)
+                        sql_al = "INSERT INTO Alergen (alergen_name, id_food_code) VALUES (%s, %s)"
+                        mycursor.execute(sql_al, tuple_al)
+                        mydb.commit()
+
+        # Alter tables for add foreign key
+        mydb = mysql.connector.connect(
+            host="localhost",
+            user="sebajou_opff",
+            passwd="3333argh",
+            database="openfactfoods_data"
+        )
+
+        # Creating a cursor object using the cursor() method
+        cursor = mydb.cursor()
+
+        # Execute alter table command
+        #mycursor.execute("ALTER TABLE `Search_food` ADD FOREIGN KEY (id_food_code) REFERENCES `Food_list` (`id_food_code`)")
+        mycursor.execute("ALTER TABLE `Search_food` ADD FOREIGN KEY (id_users) REFERENCES `Users` (`id_users`)")
+        mycursor.execute("ALTER TABLE `Alergy` ADD FOREIGN KEY (id_users) REFERENCES `Users` (`id_users`)")
+        mycursor.execute("ALTER TABLE `Alergy` ADD FOREIGN KEY (id_alergen) REFERENCES `Alergen` (`id_alergen`)")
+        mycursor.execute("ALTER TABLE `Alergen` ADD FOREIGN KEY (id_food_code) REFERENCES `Food_list` (`id_food_code`)")
+
+        mydb.commit()
+        # Closing the connection
+        mydb.close()
 
         print(allergens_list)
 
+
 Call = CallAPI()
 Call.load_data()
-
