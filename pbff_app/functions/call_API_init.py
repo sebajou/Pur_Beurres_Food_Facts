@@ -5,14 +5,15 @@ import requests
 import json
 import mysql.connector
 
-allergens = []
-
 
 class CallAPI:
-    """ Call A.P.I. Open Food Facts """
+    """ Call A.P.I. Open Food Facts and insert in Database"""
 
     def load_data(self):
-        """ Loading data of the A.P.I. Open Food Facts and convert to json """
+        """ Loading data of the A.P.I. Open Food Facts and insertion in
+        database """
+
+        # + Drop then create Tables from API
 
         # Establishing the connection
         mydb = mysql.connector.connect(
@@ -40,15 +41,24 @@ class CallAPI:
         # Closing the connection
         mydb.close()
 
-        # ...
-        categories = ['pizza', 'pate a tartiner', 'gateau', 'choucroute', 'bonbon', 'cassoulet', 'compote', 'cookies']
+        # + Fill Python list from loop on list of categories
+
+        categories = [
+            'pizza', 'pate a tartiner', 'gateau', 'choucroute',
+            'bonbon', 'cassoulet', 'compote', 'cookies']
         results = []
+        allergens = []
 
         for elt in categories:
-            payload = {'action': 'process', 'tagtype_0': 'categories', 'tag_contains_0': 'contains',
-                    'tag_0': "\'" + elt + "\'", 'sort_by': 'unique_scans_n', 'page_size': '100',
-                    'axis_x': 'energy', 'axis_y': 'products_n', 'json': '1'}
-            req = requests.get("https://fr.openfoodfacts.org/cgi/search.pl?", params=payload)
+            payload = {
+                'action': 'process', 'tagtype_0': 'categories',
+                'tag_contains_0': 'contains', 'tag_0': "\'" + elt + "\'",
+                'sort_by': 'unique_scans_n', 'page_size': '100',
+                'axis_x': 'energy', 'axis_y': 'products_n', 'json': '1'
+                }
+            req = requests.get(
+                "https://fr.openfoodfacts.org/cgi/search.pl?", params=payload
+                )
             data_json = req.json()
 
             for data in data_json['products']:
@@ -62,7 +72,9 @@ class CallAPI:
                 except:
                     pass
 
-                tuple_data = (data_id, data_product_name_fr, elt, data_nova_group, data_nutriscore_grade, data_url)
+                tuple_data = (
+                    data_id, data_product_name_fr, elt, 
+                    data_nova_group, data_nutriscore_grade, data_url)
 
                 # Loop in allergens list in each product
                 for al in data_allergens:
@@ -72,6 +84,8 @@ class CallAPI:
                         allergens.append(al)
                 # List of allergens without dooble
                 allergens_list = set(allergens)
+
+                # + Fill database tables from list
 
                 # Connection to database
                 mydb = mysql.connector.connect(
@@ -99,7 +113,9 @@ class CallAPI:
                         mycursor.execute(sql_al, tuple_al)
                         mydb.commit()
 
-        # Alter tables for add foreign key
+        # + Alter tables for add foreign key
+
+        # Connect to database
         mydb = mysql.connector.connect(
             host="localhost",
             user="sebajou_opff",
@@ -108,10 +124,10 @@ class CallAPI:
         )
 
         # Creating a cursor object using the cursor() method
-        cursor = mydb.cursor()
+        mycursor = mydb.cursor()
 
-        # Execute alter table command
-        #mycursor.execute("ALTER TABLE `Search_food` ADD FOREIGN KEY (id_food_code) REFERENCES `Food_list` (`id_food_code`)")
+        # Execute alter table command for foreign key property
+        mycursor.execute("ALTER TABLE `Search_food` ADD FOREIGN KEY (id_food_code) REFERENCES `Food_list` (`id_food_code`)")
         mycursor.execute("ALTER TABLE `Search_food` ADD FOREIGN KEY (id_users) REFERENCES `Users` (`id_users`)")
         mycursor.execute("ALTER TABLE `Alergy` ADD FOREIGN KEY (id_users) REFERENCES `Users` (`id_users`)")
         mycursor.execute("ALTER TABLE `Alergy` ADD FOREIGN KEY (id_alergen) REFERENCES `Alergen` (`id_alergen`)")
