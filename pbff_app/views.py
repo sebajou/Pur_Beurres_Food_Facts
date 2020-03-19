@@ -75,6 +75,60 @@ def register_user():
             
             return redirect(url_for('my_info'))
 
+# View for connection
+@app.route("/connection", methods=["GET", "POST"])
+def connection():
+    error = None
+
+    if request.method == "POST":
+        email = request.form["email"]
+
+        password = request.form["password"]
+        password_hash = hashlib.sha256(str(password).encode("utf-8")).hexdigest()
+
+        # Verify in database if email and password exist
+        result_connection_client = Database.verif_connection_client(mycursor, email, password_hash)
+
+        if len(result_connection_client) == 0:
+            session['email'] = None
+            error = "This email or this password is wrong, please try again"
+            return render_template("connection.html", error=error)
+
+        else:
+            session["email"] = request.form["email"]
+            return redirect(url_for('my_info'))
+
+    elif request.method == "GET":
+        return render_template("connection.html")
+
+# Print the account information
+@app.route("/my_info", methods=["GET", "POST"])
+def my_info():
+    if request.method == "GET" and "email" in session:
+        email = session["email"]
+        req_get_id_user = "SELECT id_users FROM Users WHERE email = '%s'"
+        mycursor.execute(req_get_id_user % email)
+        id_users = mycursor.fetchone()
+
+        req_info_users = "SELECT Users.first_name, Users.last_name, Users.email, Users.diet_type, Users.alergy FROM Users WHERE Users.email = '%s'"
+        mycursor.execute(req_info_users % email)
+        result_req_info_users = mycursor.fetchall()
+
+        # print(result_req_info_users)
+        return render_template("/my_info.html",
+                               result_req_info_users=result_req_info_users)
+
+    if request.method == "POST":
+        email = session["email"]
+
+        req_get_id_users = "SELECT id_users FROM Users WHERE Email = '%s'"
+        mycursor.execute(req_get_id_users % e_mail)
+        id_users = mycursor.fetchone()
+
+        return redirect(url_for('my_info'))
+    else :
+        return redirect(url_for('connection'))
+
 @app.route('/search_food_page/')
 def search_food_page():
     #integration of json data from API OFF in list

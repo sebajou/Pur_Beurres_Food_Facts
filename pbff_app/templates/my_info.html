@@ -1,0 +1,23 @@
+<!-- ... -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset = "UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+<!--<link rel="stylesheet" href="{{ url_for('static', filename='styles/mefs_informations.css') }}">-->
+<body>
+
+    <center>
+
+    <div class="wrapper">
+        <div class="card">
+            <h1>My info</h1>
+            {% for result_req_info_user in result_req_info_users %}
+                <h2>{{ result_req_info_user [0] }} {{ result_req_info_user [1] }}</h2>
+                <p>Email : {{ result_req_info_user [2] }}</p>
+                <p>Diet : {{ result_req_info_user [3] }} </p> 
+                <p>Alergy : {{ result_req_info_user [4] }} </p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
