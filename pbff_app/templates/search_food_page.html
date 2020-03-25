@@ -6,4 +6,20 @@
 
 {% block body %}
 
+<p>Categories:
+    <select name="categories">
+        {% for categories in categories %}
+            <option value="{{ categories }}">{{ categories }}</option>
+        {% endfor %}
+</select> <br><br></p>
+
+<p>food_name_cat_list:
+    <select name="Food name cat list">
+        {% for food_name_cat_list in food_name_cat_list %}
+            <option value="{{ food_name_cat_list }}">{{ food_name_cat_list }}</option>
+        {% endfor %}
+</select> <br><br></p>
+
+<a href="http://127.0.0.1:5000/to_logout"><h5>to logout</h5></a>
+
 {% endblock %}

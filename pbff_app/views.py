@@ -11,11 +11,17 @@ app = Flask(__name__)
 app.config.from_object('config')
 app.secret_key = the_secret_key
 
+
 # Instanciation of database_functions
 Database = db.Database()
 # Connection to database
 mydb, mycursor = Database.connect_database()
 
+@app.before_first_request
+def before_first_request_func():
+    # Load the data from API
+    from pbff_app.functions.call_API import load_data
+    load_data()
 
 @app.route('/')
 def index():
@@ -32,13 +38,13 @@ def register_user():
 
     diet_types = ["Omnivor", "Vegan", "Vegetarian", "Carnivor", "Cannibal"]
 
-    alergies = ['none', 'en:milk', 'en:gluten', 'en:edam-cheese', 'en:nuts',
-                'en:sulphur-dioxide-and-sulphites', 'en:molluscs',
-                'en:sesame-seeds', 'en:mozzarella-cheese', 'en:lupin', 'en:eggs',
-                'en:fish', 'en:cajou', 'en:huile-de-beurre', 'en:celery',
-                'en:soybeans', 'en:mustard', 'en:crustaceans', 'en:peanuts']
+    alergies = ['none', 'milk', 'gluten', 'edam-cheese', 'nuts',
+                'sulphur-dioxide-and-sulphites', 'molluscs',
+                'sesame-seeds', 'mozzarella-cheese', 'lupin', 'eggs',
+                'fish', 'cajou', 'huile-de-beurre', 'celery',
+                'soybeans', 'mustard', 'crustaceans', 'peanuts']
 
-    if "e_mail" in session:
+    if "email" in session:
         return redirect(url_for('my_info'))
 
     if request.method == "GET":
@@ -72,7 +78,7 @@ def register_user():
                 diet_type_record, alergy_record)
             Database.insert_record_user(mydb, mycursor, to_insert)
             session["email"] = request.form["email"]
-            
+
             return redirect(url_for('my_info'))
 
 # View for connection
@@ -100,6 +106,7 @@ def connection():
 
     elif request.method == "GET":
         return render_template("connection.html")
+
 
 # Print the account information
 @app.route("/my_info", methods=["GET", "POST"])
@@ -129,32 +136,32 @@ def my_info():
     else :
         return redirect(url_for('connection'))
 
-@app.route('/search_food_page/')
+# Page where we search (select) the food
+@app.route('/search_food_page')
 def search_food_page():
-    #integration of json data from API OFF in list
-    response = requests.get(OFF_API_URL)
-    content = json.loads(response.content.decode('utf-8'))
 
-    if response.status_code != 200:
-        return jsonify({
-            'status': 'error',
-            'message': 'API request fail. See the message : {}'.format(content['message'])
-        }), 500
+    # Optain categories list
+    categories = Database.show_categories(mycursor)
+    categorie = 'pizza'
+    food_name_cat_list = Database.show_food_name(mycursor, categorie)
 
-    data = []
-    for prev in content["list"]:
-        food_code = prev['xxxx']
-        healthiest_food_code = prev['yyyy']
-        id_users = zzzz
+    # Give a list of food category and of food name
+    if request.method == "GET":
+        return render_template(
+            "search_food_page.html", categories=categories, food_name_cat_list=food_name_cat_list)
 
-    return jsonify({
-      'status': 'ok',
-      'data': data
-    })
-
-    # Insertion of search result data
+    # Optain selection on html form
+    if request.method == "POST":
+        categories = request.form["categories"]
+        food_name_cat_list = request.form["food_name_cat_list"]
 
 
+# For deconection
+@app.route("/to_logout")
+def to_logout():
+    session.pop("email", None)
+    flash('Now you are logout')
+    return redirect(url_for('connection'))
 
 if __name__ == "__main__":
     session.init_app(app)

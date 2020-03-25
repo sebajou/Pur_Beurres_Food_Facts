@@ -33,6 +33,22 @@ class Database:
         mydb.commit()"""
         pass
 
+    # Show categories
+    def show_categories(self, mycursor):
+        mycursor.execute("SELECT DISTINCT category FROM Food_list")
+        categoriesTuple = mycursor.fetchall()
+        categories = list(sum(categoriesTuple, ())) 
+        return categories
+
+    # Show food_name for a given category
+    def show_food_name(self, mycursor, category):
+        categoryTuple = (category,)
+        sql = "SELECT food_name FROM Food_list WHERE category = %s"
+        mycursor.execute(sql, categoryTuple)
+        food_name_cat_tuple = mycursor.fetchall()
+        food_name_cat_list = list(sum(food_name_cat_tuple, ()))
+        return food_name_cat_list
+
     # Verify email and password for connection
     def verif_connection_client(self, mycursor, email, password_hash):
         req_connection_client = "SELECT * FROM Users where email = '%s' AND password = '%s' "
