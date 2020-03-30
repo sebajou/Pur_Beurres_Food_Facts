@@ -17,11 +17,11 @@ Database = db.Database()
 # Connection to database
 mydb, mycursor = Database.connect_database()
 
-@app.before_first_request
+"""@app.before_first_request
 def before_first_request_func():
     # Load the data from API
     from pbff_app.functions.call_API import load_data
-    load_data()
+    load_data()"""
 
 @app.route('/')
 def index():
@@ -81,6 +81,7 @@ def register_user():
 
             return redirect(url_for('my_info'))
 
+
 # View for connection
 @app.route("/connection", methods=["GET", "POST"])
 def connection():
@@ -136,27 +137,76 @@ def my_info():
     else :
         return redirect(url_for('connection'))
 
+
 # Page where we search (select) the food
-@app.route('/search_food_page')
+@app.route('/search_food_page', methods=["GET", "POST"])
 def search_food_page():
 
-    # Optain categories list
+    # Obtain categories list
     categories = Database.show_categories(mycursor)
-    categorie = 'pizza'
-    food_name_cat_list = Database.show_food_name(mycursor, categorie)
 
-    # Give a list of food category and of food name
+    # Give a list of food category to display in html
     if request.method == "GET":
         return render_template(
-            "search_food_page.html", categories=categories, food_name_cat_list=food_name_cat_list)
+            "search_food_page.html", categories=categories)
 
-    # Optain selection on html form
+    # Obtain selection on html form
     if request.method == "POST":
-        categories = request.form["categories"]
-        food_name_cat_list = request.form["food_name_cat_list"]
+        global category_record
+        category_record = request.form["category"]
+        return redirect(url_for('search_food_page2'))
 
 
-# For deconection
+# Page where we search (select) the food
+@app.route('/search_food_page2', methods=["GET", "POST"])
+def search_food_page2():
+
+    # Obtain tuple of food name and id for a given category and give list of food name
+    food_name_cat_tuple = Database.show_food_name(mycursor, category_record)
+    food_name_cat_list = [i for i, y in food_name_cat_tuple]
+
+    # Give a list of food category
+    if request.method == "GET":
+        return render_template(
+            "search_food_page2.html", food_name_cat_list=food_name_cat_list)
+
+    # Obtain selection on html form
+    if request.method == "POST":
+        global food_name
+        food_name = request.form["food_name_cat"]
+        return redirect(url_for('search_food_page3'))
+
+
+@app.route('/search_food_page3', methods=["GET", "POST"])
+def search_food_page3():
+
+    # Obtain the healthiest food for a given category
+    # healthiest_food_name, healthiest_score_Nova_group, healthiest_nutriscore_grade, healthiest_food_url
+    healthiest_food_tuple = Database.selec_healthiest_food(mycursor, category_record)
+    id_food_code, healthiest_food_name, healthiest_score_Nova_group, healthiest_nutriscore_grade, healthiest_food_url = healthiest_food_tuple[0]
+
+    if request.method == "GET":
+        return render_template(
+            "search_food_page3.html", category_record=category_record,
+            food_name=food_name, id_food_code=id_food_code, healthiest_food_name=healthiest_food_name,
+            healthiest_score_Nova_group=healthiest_score_Nova_group,
+            healthiest_nutriscore_grade=healthiest_nutriscore_grade,
+            healthiest_food_url=healthiest_food_url)
+
+
+    if request.method == "POST":
+        email = session['email']
+        print(email)
+        id_user_tuple = get_id_user(mycursor, email)
+        id_user = sum(id_user_tuple, ())
+        print(id_user)
+
+        to_insert = (
+            id_food_code, id_user)
+        Database.insert_search_result(mydb, mycursor, to_insert)
+        return redirect(url_for('my_info'))
+
+# For deconnection
 @app.route("/to_logout")
 def to_logout():
     session.pop("email", None)
