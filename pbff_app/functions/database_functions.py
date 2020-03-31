@@ -25,10 +25,9 @@ class Database:
         mydb.commit()
 
     # Insert search result data in Search_food table
-    def insert_search_result(self,mydb,  mycursor, data):
-        sql = "INSERT INTO Search_food (healthiest_food_code, id_users) VALUES (%s, %s, %s)"
-        val = tuple(data)
-        mycursor.execute(sql, val)
+    def insert_search_result(self, mydb,  mycursor, to_insert):
+        sql = "INSERT INTO Search_food (id_food_code, id_users) VALUES (%s, %s)"
+        mycursor.execute(sql, to_insert)
         mydb.commit()
 
     # Show categories
@@ -62,10 +61,22 @@ class Database:
 
     # Get id_user from email
     def get_id_user(self, mycursor, email):
+        email_tuple = (email,)
         sql = "SELECT id_users FROM Users WHERE email = %s"
-        mycursor.execute(sql, email)
+        mycursor.execute(sql, email_tuple)
         id_users_tuple = mycursor.fetchall()
         return id_users_tuple
+
+    # Get category, food_name, id_food_code, healthiest_food_url and id_users
+    # from INNER JOIN on Search_food and Food_list table
+    def get_search_history_info(self, mycursor, id_users):
+        id_users_tuple = (id_users,)
+        sql = "SELECT Search_food.id_food_code AS id_food_code, Food_list.food_name AS food_name, \
+        Food_list.food_url AS food_url, Search_food.id_users AS id_users, Food_list.category AS category\
+         FROM Food_list INNER JOIN Search_food ON  Search_food.id_food_code = Food_list.id_food_code WHERE id_users = %s"
+        mycursor.execute(sql, id_users_tuple)
+        search_history_info_tuple = mycursor.fetchall()
+        return search_history_info_tuple
 
     # Verify email and password for connection
     def verif_connection_client(self, mycursor, email, password_hash):

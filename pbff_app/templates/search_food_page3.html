@@ -11,7 +11,9 @@
 
     <div id="HealthiestFood">The healthiest food: </div><div id="resultHealthiestFood">Healthiest food: {{ healthiest_food_name }},
     Nutriscore grade: {{ healthiest_nutriscore_grade }}</div><a href="{{ healthiest_food_url }}"><h5>Link to the healthiest food on Open food facts</h5></a><br>
-    <div><button id="submit">Save the research result ?</button></div>
+    <form action="" method="post">
+        <div><button id="submit">Save the research result ?</button></div>
+    </form>
 
     <a href="http://127.0.0.1:5000/my_info"><h5>My Info</h5></a>
     <a href="http://127.0.0.1:5000/to_logout"><h5>to logout</h5></a>

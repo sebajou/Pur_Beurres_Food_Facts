@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block head %}
+<h1>Page for search the healthiest food 2</h1>
+{% endblock %}
+
+{% block body %}
+
+    <center>
+
+    <div class="wrapper">
+        <div class="card">
+            <h1>My search food history info</h1>
+            {% for search_history_info_tuple in search_history_info_tuple %}
+                <h2>id_food_code: {{ search_history_info_tuple [0] }}, food_name: {{ search_history_info_tuple [1] }}</h2>
+                <p><a href="{{ search_history_info_tuple [2] }}"><h5>Link to the healthiest food on Open food facts</h5></a></p>
+                <p>id_users : {{ search_history_info_tuple [3] }} </p>
+                <p>category : {{ search_history_info_tuple [4] }} </p>
+            {% endfor %}
+        </div>
+    </div>
+
+
+    <a href="http://127.0.0.1:5000/search_food_page"><h5>Search Food Page</h5></a>
+    <a href="http://127.0.0.1:5000/my_info"><h5>My Info</h5></a>
+    <a href="http://127.0.0.1:5000/to_logout"><h5>to logout</h5></a>
+
+{% endblock %}

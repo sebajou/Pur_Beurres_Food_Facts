@@ -185,6 +185,7 @@ def search_food_page3():
     healthiest_food_tuple = Database.selec_healthiest_food(mycursor, category_record)
     id_food_code, healthiest_food_name, healthiest_score_Nova_group, healthiest_nutriscore_grade, healthiest_food_url = healthiest_food_tuple[0]
 
+
     if request.method == "GET":
         return render_template(
             "search_food_page3.html", category_record=category_record,
@@ -193,18 +194,37 @@ def search_food_page3():
             healthiest_nutriscore_grade=healthiest_nutriscore_grade,
             healthiest_food_url=healthiest_food_url)
 
-
     if request.method == "POST":
         email = session['email']
-        print(email)
-        id_user_tuple = get_id_user(mycursor, email)
-        id_user = sum(id_user_tuple, ())
-        print(id_user)
+        id_user_tuple = Database.get_id_user(mycursor, email)
+        id_user, = sum(id_user_tuple, ())
 
-        to_insert = (
-            id_food_code, id_user)
+        to_insert = (id_food_code, id_user)
         Database.insert_search_result(mydb, mycursor, to_insert)
-        return redirect(url_for('my_info'))
+        return redirect(url_for('search_food_page_history'))
+
+# View history of search food, with link to food
+@app.route("/search_food_page_history")
+def search_food_page_history():
+
+    # Obtain id_user
+    email = session['email']
+    id_user_tuple = Database.get_id_user(mycursor, email)
+    id_user, = sum(id_user_tuple, ())
+
+    # Obtain category, food_name, id_food_code,
+    # healthiest_food_url and id_users from Search_food and Food_list table
+    # id_food_code, food_name, food_url, id_users, category = Database.get_search_history_info(mycursor, id_user)
+    search_history_info_tuple = Database.get_search_history_info(mycursor, id_user)
+
+    if request.method == "GET":
+        return render_template(
+            "search_food_page_history.html", search_history_info_tuple=search_history_info_tuple)
+
+"""category=category,
+food_name=food_name, id_food_code=id_food_code,
+food_url=food_url, id_users=id_users)"""
+
 
 # For deconnection
 @app.route("/to_logout")
