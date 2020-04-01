@@ -17,11 +17,12 @@ Database = db.Database()
 # Connection to database
 mydb, mycursor = Database.connect_database()
 
-"""@app.before_first_request
+@app.before_first_request
 def before_first_request_func():
     # Load the data from API
-    from pbff_app.functions.call_API import load_data
-    load_data()"""
+    import pbff_app.functions.call_API as CallAPI
+    Call = CallAPI.CallApiOff()
+    Call.load_data()
 
 @app.route('/')
 def index():
