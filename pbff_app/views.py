@@ -184,7 +184,7 @@ def search_food_page3():
     # Obtain the healthiest food for a given category
     # healthiest_food_name, healthiest_score_Nova_group, healthiest_nutriscore_grade, healthiest_food_url
     healthiest_food_tuple = Database.selec_healthiest_food(mycursor, category_record)
-    id_food_code, healthiest_food_name, healthiest_score_Nova_group, healthiest_nutriscore_grade, healthiest_food_url = healthiest_food_tuple[0]
+    id_food_code, healthiest_food_name, healthiest_score_Nova_group, healthiest_nutriscore_grade, healthiest_food_url, healthiest_description, healthiest_stores = healthiest_food_tuple[0]
 
 
     if request.method == "GET":
@@ -193,7 +193,9 @@ def search_food_page3():
             food_name=food_name, id_food_code=id_food_code, healthiest_food_name=healthiest_food_name,
             healthiest_score_Nova_group=healthiest_score_Nova_group,
             healthiest_nutriscore_grade=healthiest_nutriscore_grade,
-            healthiest_food_url=healthiest_food_url)
+            healthiest_food_url=healthiest_food_url,
+        healthiest_description=healthiest_description,
+        healthiest_stores=healthiest_stores)
 
     if request.method == "POST":
         email = session['email']

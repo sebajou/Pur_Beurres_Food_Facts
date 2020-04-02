@@ -32,7 +32,7 @@ class CallApiOff:
         mycursor.execute(sql_key_zero)
         mycursor.execute(sql_drop_table_Food_list)
         mycursor.execute(sql_drop_table_Alergen)
-        mycursor.execute("CREATE TABLE Food_list (id_food_code VARCHAR(100) NOT NULL PRIMARY KEY, food_name VARCHAR(100) NULL DEFAULT NULL, `category` VARCHAR(40) NULL DEFAULT NULL, score_Nova_group INTEGER NULL DEFAULT NULL, nutriscore_grade CHAR(1) NULL DEFAULT NULL, food_url MEDIUMTEXT NULL DEFAULT NULL)")
+        mycursor.execute("CREATE TABLE Food_list (id_food_code VARCHAR(100) NOT NULL PRIMARY KEY, food_name VARCHAR(100) NULL DEFAULT NULL, `category` VARCHAR(40) NULL DEFAULT NULL, score_Nova_group INTEGER NULL DEFAULT NULL, nutriscore_grade CHAR(1) NULL DEFAULT NULL, food_url MEDIUMTEXT NULL DEFAULT NULL, description VARCHAR(200) NULL DEFAULT NULL, store VARCHAR(70) NULL DEFAULT NULL)")
         mycursor.execute("CREATE TABLE `Alergen` (`id_alergen` INTEGER NOT NULL AUTO_INCREMENT, `alergen_name` VARCHAR(100) NULL DEFAULT NULL, `id_food_code` VARCHAR(100) NULL DEFAULT NULL, PRIMARY KEY (`id_alergen`))")
         sql_key_one = "SET FOREIGN_KEY_CHECKS=1"
         mycursor.execute(sql_key_one)
@@ -44,7 +44,7 @@ class CallApiOff:
 
         categories = [
             'pizza', 'pate a tartiner', 'gateau', 'choucroute', 'bonbon',
-            'cassoulet', 'compote', 'cookies', 'tartiflette']
+            'cassoulet', 'compote', 'cookies', 'tartiflette', 'bolognaise']
         results = []
         allergens = []
 
@@ -72,12 +72,14 @@ class CallApiOff:
                     data_nova_group = data['nova_group']
                     data_nutriscore_grade = data['nutriscore_grade']
                     data_allergens = data['allergens_tags']
+                    data_description = data['generic_name']
+                    data_stores = data['stores']
                 except:
                     pass
 
                 tuple_data = (
                     data_id, data_product_name_fr, elt,
-                    data_nova_group, data_nutriscore_grade, data_url)
+                    data_nova_group, data_nutriscore_grade, data_url, data_description, data_stores)
 
                 # Loop in allergens list in each product
                 for al in data_allergens:
@@ -102,7 +104,7 @@ class CallApiOff:
                 mycursor = mydb.cursor()
 
                 try:
-                    sql = "INSERT INTO Food_list (id_food_code, food_name, category, score_Nova_group, nutriscore_grade, food_url) VALUES (%s, %s, %s, %s, %s, %s)"
+                    sql = "INSERT INTO Food_list (id_food_code, food_name, category, score_Nova_group, nutriscore_grade, food_url, description, store) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
                     mycursor.execute(sql, tuple_data)
                     mydb.commit()
                 except:
@@ -130,11 +132,13 @@ class CallApiOff:
         mycursor = mydb.cursor()
 
         # Execute alter table command for foreign key property
+        mycursor.execute("SET FOREIGN_KEY_CHECKS=0")
         mycursor.execute("ALTER TABLE `Search_food` ADD FOREIGN KEY (id_food_code) REFERENCES `Food_list` (`id_food_code`)")
         mycursor.execute("ALTER TABLE `Search_food` ADD FOREIGN KEY (id_users) REFERENCES `Users` (`id_users`)")
         mycursor.execute("ALTER TABLE `Alergy` ADD FOREIGN KEY (id_users) REFERENCES `Users` (`id_users`)")
         mycursor.execute("ALTER TABLE `Alergy` ADD FOREIGN KEY (id_alergen) REFERENCES `Alergen` (`id_alergen`)")
         mycursor.execute("ALTER TABLE `Alergen` ADD FOREIGN KEY (id_food_code) REFERENCES `Food_list` (`id_food_code`)")
+        mycursor.execute("SET FOREIGN_KEY_CHECKS=1")
 
         mydb.commit()
         # Closing the connection

@@ -54,7 +54,7 @@ class Database:
     # Select the healthiest food:
     def selec_healthiest_food(self, mycursor, category):
         categoryTuple = (category,)
-        sql = "SELECT id_food_code, food_name, score_Nova_group, nutriscore_grade, food_url FROM Food_list WHERE category = %s ORDER BY nutriscore_grade ASC LIMIT 1"
+        sql = "SELECT id_food_code, food_name, score_Nova_group, nutriscore_grade, food_url, description, store FROM Food_list WHERE category = %s ORDER BY nutriscore_grade ASC LIMIT 1"
         mycursor.execute(sql, categoryTuple)
         healthiest_food_tuple = mycursor.fetchall()
         return healthiest_food_tuple
@@ -72,7 +72,8 @@ class Database:
     def get_search_history_info(self, mycursor, id_users):
         id_users_tuple = (id_users,)
         sql = "SELECT Search_food.id_food_code AS id_food_code, Food_list.food_name AS food_name, \
-        Food_list.food_url AS food_url, Search_food.id_users AS id_users, Food_list.category AS category\
+        Food_list.food_url AS food_url, Search_food.id_users AS id_users, Food_list.category AS category, \
+        Food_list.description AS description, Food_list.store AS store\
          FROM Food_list INNER JOIN Search_food ON  Search_food.id_food_code = Food_list.id_food_code WHERE id_users = %s"
         mycursor.execute(sql, id_users_tuple)
         search_history_info_tuple = mycursor.fetchall()
