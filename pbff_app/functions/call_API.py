@@ -8,6 +8,94 @@ import mysql.connector
 class CallApiOff:
     """Class for call the API OFF"""
 
+    def __init__(self):
+        self.categories = ['pizza', 'pate a tartiner', 'gateau', 'choucroute', 'bonbon', 'cassoulet', 'compote', 'cookies',
+                      'tartiflette', 'bolognaise']
+
+    def append_category(self, add_category):
+        """Append a new category in the category list"""
+
+        allergens = []
+
+        # self.categories.append(add_category)
+        payload = {
+            'action': 'process', 'tagtype_0': 'categories',
+            'tag_contains_0': 'contains', 'tag_0': "\'" + add_category + "\'",
+            'sort_by': 'unique_scans_n', 'page_size': '100',
+            'axis_x': 'energy', 'axis_y': 'products_n', 'json': '1'
+        }
+        req = requests.get(
+            "https://fr.openfoodfacts.org/cgi/search.pl?", params=payload
+        )
+        data_json = req.json()
+        print(add_category)
+
+        for data in data_json['products']:
+            try:
+                if data['product_name_fr'] == '':
+                    data_product_name_fr = add_category
+                else:
+                    data_product_name_fr = data['product_name_fr']
+                data_id = int(data['id'])
+                data_url = data['url']
+                data_nova_group = data['nova_group']
+                data_nutriscore_grade = data['nutriscore_grade']
+                data_allergens = data['allergens_tags']
+                data_description = data['generic_name']
+                data_stores = data['stores']
+            except:
+                pass
+
+            tuple_data = (
+                data_id, data_product_name_fr, add_category,
+                data_nova_group, data_nutriscore_grade, data_url, data_description, data_stores)
+
+            # Loop in allergens list in each product
+            for al in data_allergens:
+                # Choose only english name allergens
+                if al[:3] == 'en:':
+                    # List all allergens in each product
+                    allergens.append(al)
+            # List of allergens without dooble
+            allergens_list = set(allergens)
+
+            # + Fill database tables from list
+
+            # Connection to database
+            mydb = mysql.connector.connect(
+                host="localhost",
+                user="sebajou_opff",
+                passwd="3333argh",
+                database="openfactfoods_data"
+            )
+            # Creating a cursor object using the cursor() method
+            mycursor = mydb.cursor()
+
+            mycursor.execute("SET FOREIGN_KEY_CHECKS=0")
+
+            # Insertion of search result data
+            mycursor = mydb.cursor()
+
+            try:
+                sql = "INSERT INTO Food_list (id_food_code, food_name, category, score_Nova_group, nutriscore_grade, food_url, description, store) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+                mycursor.execute(sql, tuple_data)
+                mydb.commit()
+                print("inserted", add_category)
+            except:
+                pass
+
+            # Insertion of search result data
+            for al in data_allergens:
+                if al[:3] == 'en:':
+                    tuple_al = (al, data_id)
+                    sql_al = "INSERT INTO Alergen (alergen_name, id_food_code) VALUES (%s, %s)"
+                    mycursor.execute(sql_al, tuple_al)
+                    mydb.commit()
+
+            mycursor.execute("SET FOREIGN_KEY_CHECKS=1")
+
+        return add_category
+
     def load_data(self):
         """ Loading data of the A.P.I. Open Food Facts and insertion in
         database """
@@ -42,13 +130,10 @@ class CallApiOff:
 
         # + Fill Python list from loop on list of categories
 
-        categories = [
-            'pizza', 'pate a tartiner', 'gateau', 'choucroute', 'bonbon',
-            'cassoulet', 'compote', 'cookies', 'tartiflette', 'bolognaise']
         results = []
         allergens = []
 
-        for elt in categories:
+        for elt in self.categories:
             payload = {
                 'action': 'process', 'tagtype_0': 'categories',
                 'tag_contains_0': 'contains', 'tag_0': "\'" + elt + "\'",

@@ -5,6 +5,7 @@ import requests
 from config import *
 import hashlib, uuid, os
 import pbff_app.functions.database_functions as db
+import pbff_app.functions.call_API as CallAPI
 
 app = Flask(__name__)
 
@@ -14,14 +15,13 @@ app.secret_key = the_secret_key
 
 # Instanciation of database_functions
 Database = db.Database()
+Call = CallAPI.CallApiOff()
 # Connection to database
 mydb, mycursor = Database.connect_database()
 
 @app.before_first_request
 def before_first_request_func():
     # Load the data from API
-    import pbff_app.functions.call_API as CallAPI
-    Call = CallAPI.CallApiOff()
     Call.load_data()
 
 @app.route('/')
@@ -139,12 +139,29 @@ def my_info():
         return redirect(url_for('connection'))
 
 
+# Page where we can add a category of food
+@app.route('/category_add', methods=["GET", "POST"])
+def category_add():
+
+    if request.method == "GET":
+        return render_template("category_add.html")
+
+    if request.method == "POST":
+        add_category = request.form["add_category"]
+        Call.append_category(add_category)
+        # Call.load_data()
+        return redirect(url_for('search_food_page'))
+
+
 # Page where we search (select) the food
 @app.route('/search_food_page', methods=["GET", "POST"])
 def search_food_page():
 
     # Obtain categories list
+    mydb, mycursor = Database.connect_database()
     categories = Database.show_categories(mycursor)
+
+    print("view", categories)
 
     # Give a list of food category to display in html
     if request.method == "GET":
@@ -163,6 +180,7 @@ def search_food_page():
 def search_food_page2():
 
     # Obtain tuple of food name and id for a given category and give list of food name
+    mydb, mycursor = Database.connect_database()
     food_name_cat_tuple = Database.show_food_name(mycursor, category_record)
     food_name_cat_list = [i for i, y in food_name_cat_tuple]
 
@@ -183,6 +201,7 @@ def search_food_page3():
 
     # Obtain the healthiest food for a given category
     # healthiest_food_name, healthiest_score_Nova_group, healthiest_nutriscore_grade, healthiest_food_url
+    mydb, mycursor = Database.connect_database()
     healthiest_food_tuple = Database.selec_healthiest_food(mycursor, category_record)
     id_food_code, healthiest_food_name, healthiest_score_Nova_group, healthiest_nutriscore_grade, healthiest_food_url, healthiest_description, healthiest_stores = healthiest_food_tuple[0]
 
@@ -194,8 +213,8 @@ def search_food_page3():
             healthiest_score_Nova_group=healthiest_score_Nova_group,
             healthiest_nutriscore_grade=healthiest_nutriscore_grade,
             healthiest_food_url=healthiest_food_url,
-        healthiest_description=healthiest_description,
-        healthiest_stores=healthiest_stores)
+            healthiest_description=healthiest_description,
+            healthiest_stores=healthiest_stores)
 
     if request.method == "POST":
         email = session['email']
@@ -211,6 +230,7 @@ def search_food_page3():
 def search_food_page_history():
 
     # Obtain id_user
+    mydb, mycursor = Database.connect_database()
     email = session['email']
     id_user_tuple = Database.get_id_user(mycursor, email)
     id_user, = sum(id_user_tuple, ())
@@ -224,9 +244,6 @@ def search_food_page_history():
         return render_template(
             "search_food_page_history.html", search_history_info_tuple=search_history_info_tuple)
 
-"""category=category,
-food_name=food_name, id_food_code=id_food_code,
-food_url=food_url, id_users=id_users)"""
 
 
 # For deconnection

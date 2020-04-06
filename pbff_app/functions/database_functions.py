@@ -34,7 +34,8 @@ class Database:
     def show_categories(self, mycursor):
         mycursor.execute("SELECT DISTINCT category FROM Food_list")
         categoriesTuple = mycursor.fetchall()
-        categories = list(sum(categoriesTuple, ())) 
+        categories = list(sum(categoriesTuple, ()))
+        print("show_categories", categoriesTuple)
         return categories
 
     # Show food_name for a given category
@@ -71,7 +72,7 @@ class Database:
     # from INNER JOIN on Search_food and Food_list table
     def get_search_history_info(self, mycursor, id_users):
         id_users_tuple = (id_users,)
-        sql = "SELECT Search_food.id_food_code AS id_food_code, Food_list.food_name AS food_name, \
+        sql = "SELECT DISTINCT Search_food.id_food_code AS id_food_code, Food_list.food_name AS food_name, \
         Food_list.food_url AS food_url, Search_food.id_users AS id_users, Food_list.category AS category, \
         Food_list.description AS description, Food_list.store AS store\
          FROM Food_list INNER JOIN Search_food ON  Search_food.id_food_code = Food_list.id_food_code WHERE id_users = %s"
