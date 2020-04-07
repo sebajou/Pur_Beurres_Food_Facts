@@ -9,7 +9,7 @@
     <form action="" method="post">
 
         <p>Add a food category:
-        <input type="text" cols="25" name="add_category" placeholder= "add_category" maxlength="40" required/><br>
+        <input type="text" pattern="^[a-zA-Z]{1,40}$" cols="25" name="add_category" placeholder= "add_category" maxlength="40" required/><br>
         </p>
     <br><input type="submit" value="to add"><br>
     </form>
