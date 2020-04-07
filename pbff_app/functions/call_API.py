@@ -4,13 +4,31 @@
 import requests
 import json
 import mysql.connector
+import pickle
 
 class CallApiOff:
     """Class for call the API OFF"""
 
     def __init__(self):
-        self.categories = ['pizza', 'pate a tartiner', 'gateau', 'choucroute', 'bonbon', 'cassoulet', 'compote', 'cookies',
-                      'tartiflette', 'bolognaise']
+
+        with open('categories_data', 'rb') as categories_file:
+            my_unpickler = pickle.Unpickler(categories_file)
+            self.categories = my_unpickler.load()
+
+        print(self.categories, "From init")
+
+
+    def add_categories_to_pickle(self, add_category):
+        """Add the categories POST by the user in a list"""
+
+        self.categories.append(add_category)
+
+        with open('categories_data', 'wb') as categories_file:
+            my_pickler = pickle.Pickler(categories_file)
+            my_pickler.dump(self.categories)
+
+        print(self.categories, "From add_categories_to_pickle")
+
 
     def append_category(self, add_category):
         """Append a new category in the category list"""

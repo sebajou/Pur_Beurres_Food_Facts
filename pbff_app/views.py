@@ -149,7 +149,7 @@ def category_add():
     if request.method == "POST":
         add_category = request.form["add_category"]
         Call.append_category(add_category)
-        # Call.load_data()
+        Call.add_categories_to_pickle(add_category)
         return redirect(url_for('search_food_page'))
 
 
@@ -225,6 +225,7 @@ def search_food_page3():
         Database.insert_search_result(mydb, mycursor, to_insert)
         return redirect(url_for('search_food_page_history'))
 
+
 # View history of search food, with link to food
 @app.route("/search_food_page_history")
 def search_food_page_history():
@@ -245,13 +246,13 @@ def search_food_page_history():
             "search_food_page_history.html", search_history_info_tuple=search_history_info_tuple)
 
 
-
 # For deconnection
 @app.route("/to_logout")
 def to_logout():
     session.pop("email", None)
     flash('Now you are logout')
     return redirect(url_for('connection'))
+
 
 if __name__ == "__main__":
     session.init_app(app)
