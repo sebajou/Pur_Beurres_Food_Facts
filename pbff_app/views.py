@@ -29,7 +29,7 @@ def index():
     if "email" in session:
         return redirect(url_for('my_info'))
     else:
-        return render_template("/connect.html")
+        return render_template("/connection.html")
 
 # View where user is register
 @app.route("/register_user", methods=["GET", "POST"])

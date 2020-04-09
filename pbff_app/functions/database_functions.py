@@ -5,7 +5,8 @@ class Database:
     """All function using for the Database"""
 
     # Connect to database
-    def connect_database(self):
+    @staticmethod
+    def connect_database():
 
         mydb = mysql.connector.connect(
             host="localhost",

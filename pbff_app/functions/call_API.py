@@ -17,7 +17,6 @@ class CallApiOff:
 
         print(self.categories, "From init")
 
-
     def add_categories_to_pickle(self, add_category):
         """Add the categories POST by the user in a list"""
 

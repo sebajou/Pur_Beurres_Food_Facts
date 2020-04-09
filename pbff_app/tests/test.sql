@@ -1,7 +1,0 @@
-CREATE TABLE Food_list 
-(id_food_code VARCHAR(100) NOT NULL, 
-food_name VARCHAR(100) NULL DEFAULT NULL, 
-score_Nova_group INTEGER NULL DEFAULT NULL, 
-nutriscore_grade CHAR(1) NULL DEFAULT NULL, 
-food_url MEDIUMTEXT NULL DEFAULT NULL, 
-PRIMARY KEY (id_food_code)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
